@@ -3,12 +3,17 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/ServerRest.java</file>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/OperazioneRequest.java</file>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/OperazioneResponse.java</file>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/CalcolatriceService.java</file>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/PostHandler.java</file>
-            <file>file:/Users/delfo/NetBeansProjects/ServerRest/src/serverrest/GetHandler.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/App.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/OperazioneRequest.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/OperazioneResponseV2.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/GetHandlerV2.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/OperazioneResponseV1.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/GetHandlerV1.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/PostHandlerV2.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/CalcolatriceService.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/ServerRest.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/PostHandlerV1.java</file>
+            <file>file:/C:/Users/Andrea/Documents/ServerRest-Calcolatrice/src/serverrest/CalcolatriceServiceV2.java</file>
         </group>
     </open-files>
 </project-private>

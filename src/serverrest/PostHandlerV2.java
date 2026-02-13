@@ -18,17 +18,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
 /**
- *
+ * Handler per richieste POST - API v2
+ * Supporta: +, -, *, /, ^, %, sqrt
+ * 
  * @author delfo
  */
-
-
-public class PostHandler implements HttpHandler {
+public class PostHandlerV2 implements HttpHandler {
     
-    // Istanza Gson configurata per pretty printing
     private final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .create();
@@ -36,23 +33,20 @@ public class PostHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         
-        // Verifica che sia una richiesta POST
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             inviaErrore(exchange, 405, "Metodo non consentito. Usa POST");
             return;
         }
         
         try {
-            // Legge il body della richiesta
+            
             BufferedReader reader = new BufferedReader(
                 new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)
             );
-            
-            // GSON converte automaticamente il JSON in oggetto Java
+           
             OperazioneRequest request = gson.fromJson(reader, OperazioneRequest.class);
             reader.close();
             
-            // Validazione
             if (request == null) {
                 inviaErrore(exchange, 400, "Body della richiesta vuoto o non valido");
                 return;
@@ -63,25 +57,33 @@ public class PostHandler implements HttpHandler {
                 return;
             }
             
-            // Esegue il calcolo
-            double risultato = CalcolatriceService.calcola(
-                request.getOperando1(),
-                request.getOperando2(),
-                request.getOperatore()
-            );
+            double risultato;
             
-            // Crea l'oggetto risposta
-            OperazioneResponse response = new OperazioneResponse(
+            if (request.getOperatore().equalsIgnoreCase("sqrt")) {
+                risultato = CalcolatriceServiceV2.calcola(
+                    request.getOperando1(),
+                    0,
+                    request.getOperatore()
+                );
+            } else {
+
+                risultato = CalcolatriceServiceV2.calcola(
+                    request.getOperando1(),
+                    request.getOperando2(),
+                    request.getOperatore()
+                );
+            }
+            
+            OperazioneResponseV2 response = new OperazioneResponseV2(
                 request.getOperando1(),
                 request.getOperando2(),
                 request.getOperatore(),
                 risultato
             );
             
-            // GSON converte automaticamente l'oggetto Java in JSON
             String jsonRisposta = gson.toJson(response);
-            
-            inviaRisposta(exchange, 200, jsonRisposta);
+           
+            inviaRisposta(exchange, 200, jsonRisposta, response.getRequest_id());
             
         } catch (JsonSyntaxException e) {
             inviaErrore(exchange, 400, "JSON non valido: " + e.getMessage());
@@ -93,13 +95,15 @@ public class PostHandler implements HttpHandler {
     }
     
     /**
-     * Invia una risposta di successo
+     * Invia una risposta di successo con X-Request-ID header
      */
-    private void inviaRisposta(HttpExchange exchange, int codice, String jsonRisposta) 
-            throws IOException {
+    private void inviaRisposta(HttpExchange exchange, int codice, 
+            String jsonRisposta, String requestId) throws IOException {
         
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("X-Request-ID", requestId);
+        exchange.getResponseHeaders().set("X-API-Version", "2.0");
         
         byte[] bytes = jsonRisposta.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(codice, bytes.length);
@@ -115,11 +119,22 @@ public class PostHandler implements HttpHandler {
     private void inviaErrore(HttpExchange exchange, int codice, String messaggio) 
             throws IOException {
         
-        Map errore = new HashMap<>();
+        Map<String, Object> errore = new HashMap<>();
         errore.put("errore", messaggio);
         errore.put("status", codice);
+        errore.put("versione_api", "2.0");
         
         String jsonErrore = gson.toJson(errore);
-        inviaRisposta(exchange, codice, jsonErrore);
+        
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("X-API-Version", "2.0");
+        
+        byte[] bytes = jsonErrore.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(codice, bytes.length);
+        
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
     }
 }

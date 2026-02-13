@@ -25,8 +25,6 @@ public class CalcolatriceService {
         if (operatore == null || operatore.trim().isEmpty()) {
             throw new IllegalArgumentException("Operatore non può essere vuoto");
         }
-        
-        // Convertiamo l'operatore in maiuscolo per gestire input case-insensitive
         String op = operatore.toUpperCase().trim();
         
         switch (op) {

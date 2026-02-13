@@ -16,7 +16,6 @@ public class App {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // Configurazione porta (default 8080)
         int porta = 8080;
         if (args.length > 0) {
             try {
@@ -25,8 +24,6 @@ public class App {
                 System.err.println("Porta non valida, uso porta default 8080");
             }
         }
-        
-        // Avvia il server REST
         ServerRest.avviaServer(porta);
     }
 }

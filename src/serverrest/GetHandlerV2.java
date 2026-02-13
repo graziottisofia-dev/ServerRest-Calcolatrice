@@ -16,63 +16,57 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
 /**
- *
+ * Handler per richieste GET - API v2
+ * Supporta: +, -, *, /, ^, %, sqrt
+ * 
  * @author delfo
  */
-
-
-public class GetHandler implements HttpHandler {
-    
-    // Istanza Gson configurata per pretty printing
+public class GetHandlerV2 implements HttpHandler {
     private final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .create();
     
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        
-        // Verifica che sia una richiesta GET
         if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
             inviaErrore(exchange, 405, "Metodo non consentito. Usa GET");
             return;
         }
         
         try {
-            // Estrae i parametri dalla query string
             Map<String, String> parametri = estraiParametri(exchange.getRequestURI().getQuery());
-            
-            // Validazione parametri
             if (!parametri.containsKey("operando1") || 
-                !parametri.containsKey("operando2") || 
                 !parametri.containsKey("operatore")) {
                 inviaErrore(exchange, 400, 
-                    "Parametri mancanti. Necessari: operando1, operando2, operatore");
+                    "Parametri mancanti. Necessari: operando1, operatore. " +
+                    "Operando2 opzionale (richiesto per operazioni binarie)");
                 return;
             }
-            
-            // Parsing dei valori
             double operando1 = Double.parseDouble(parametri.get("operando1"));
-            double operando2 = Double.parseDouble(parametri.get("operando2"));
             String operatore = parametri.get("operatore");
             
-            // Esegue il calcolo
-            double risultato = CalcolatriceService.calcola(operando1, operando2, operatore);
-            
-            // Crea l'oggetto risposta
-            OperazioneResponse response = new OperazioneResponse(
+            double risultato;
+            double operando2 = 0;
+            if (operatore.equalsIgnoreCase("sqrt")) {
+                risultato = CalcolatriceServiceV2.calcola(operando1, 0, operatore);
+            } else {
+                if (!parametri.containsKey("operando2")) {
+                    inviaErrore(exchange, 400, 
+                        "operando2 richiesto per l'operatore: " + operatore);
+                    return;
+                }
+                operando2 = Double.parseDouble(parametri.get("operando2"));
+                risultato = CalcolatriceServiceV2.calcola(operando1, operando2, operatore);
+            }
+            OperazioneResponseV2 response = new OperazioneResponseV2(
                 operando1,
                 operando2,
                 operatore,
                 risultato
             );
-            
-            // GSON converte automaticamente l'oggetto Java in JSON
             String jsonRisposta = gson.toJson(response);
-            
-            inviaRisposta(exchange, 200, jsonRisposta);
+            inviaRisposta(exchange, 200, jsonRisposta, response.getRequest_id());
             
         } catch (NumberFormatException e) {
             inviaErrore(exchange, 400, "Operandi non validi. Devono essere numeri");
@@ -102,7 +96,6 @@ public class GetHandler implements HttpHandler {
                     String valore = URLDecoder.decode(keyValue[1], "UTF-8");
                     parametri.put(chiave, valore);
                 } catch (Exception e) {
-                    // Ignora parametri malformati
                 }
             }
         }
@@ -111,13 +104,15 @@ public class GetHandler implements HttpHandler {
     }
     
     /**
-     * Invia una risposta di successo
+     * Invia una risposta di successo con X-Request-ID header
      */
-    private void inviaRisposta(HttpExchange exchange, int codice, String jsonRisposta) 
-            throws IOException {
+    private void inviaRisposta(HttpExchange exchange, int codice, 
+            String jsonRisposta, String requestId) throws IOException {
         
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("X-Request-ID", requestId);
+        exchange.getResponseHeaders().set("X-API-Version", "2.0");
         
         byte[] bytes = jsonRisposta.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(codice, bytes.length);
@@ -136,8 +131,19 @@ public class GetHandler implements HttpHandler {
         Map<String, Object> errore = new HashMap<>();
         errore.put("errore", messaggio);
         errore.put("status", codice);
+        errore.put("versione_api", "2.0");
         
         String jsonErrore = gson.toJson(errore);
-        inviaRisposta(exchange, codice, jsonErrore);
+        
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("X-API-Version", "2.0");
+        
+        byte[] bytes = jsonErrore.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(codice, bytes.length);
+        
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
     }
 }
